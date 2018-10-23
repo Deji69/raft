@@ -1,10 +1,10 @@
 <?php
-namespace App\Core\PHTML\Parser\Node;
+namespace Raft\Parser\Node;
 
-use App\Core\PHTML\Compiler;
-use App\Core\PHTML\Parser\Node;
-use App\Core\PHTML\Parser\Node\Expression;
-use App\Core\PHTML\Parser\Node\Expression\Variable;
+use Raft\Compiler;
+use Raft\Parser\Node;
+use Raft\Parser\Node\Expression;
+use Raft\Parser\Node\Expression\Variable;
 
 class Output extends Node implements OutputInterface
 {

@@ -1,8 +1,8 @@
 <?php
-namespace App\Core\PHTML\Parser\Node\Expression\Binary;
+namespace Raft\Parser\Node\Expression\Binary;
 
-use App\Core\PHTML\Compiler;
-use App\Core\PHTML\Parser\Node\Expression\BinaryExpression;
+use Raft\Compiler;
+use Raft\Parser\Node\Expression\BinaryExpression;
 
 class Assign extends BinaryExpression
 {

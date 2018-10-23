@@ -1,8 +1,8 @@
 <?php
-namespace App\Core\PHTML\Parser\Node;
+namespace Raft\Parser\Node;
 
-use App\Core\PHTML\Compiler;
-use App\Core\PHTML\Parser\Node;
+use Raft\Compiler;
+use Raft\Parser\Node;
 
 /**
  * Represents a body node.

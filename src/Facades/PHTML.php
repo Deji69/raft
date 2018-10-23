@@ -1,5 +1,5 @@
 <?php
-namespace App\Core\PHTML\Facades;
+namespace Raft\Facades;
 
 use Illuminate\Support\Facades\Facade;
 

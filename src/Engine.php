@@ -1,45 +1,38 @@
 <?php
-namespace App\Core\PHTML;
+namespace Raft;
 
 use Exception;
 use Throwable;
 use ErrorException;
-use App\Core\PHTML\Parser\Node;
+use Raft\Parser;
+use Raft\Parser\Node;
 use Illuminate\View\Compilers\CompilerInterface;
 use Symfony\Component\Debug\Exception\FatalThrowableError;
 
 class Engine
 {
 	/**
-	 * The PHTML lexer instance.
-	 *
 	 * @var Lexer
 	 */
 	protected $lexer;
 
 	/**
-	 * The PHTML parser instance.
-	 *
 	 * @var Parser
 	 */
 	protected $parser;
 
 	/**
-	 * The PHTML compiler instance.
-	 *
 	 * @var CompilerInterface
 	 */
 	protected $compiler;
 
 	/**
-	 * The PHTML environment instance.
-	 *
 	 * @var Environment
 	 */
 	protected $environment;
 
 	/**
-	 * Create a new FML engine instance.
+	 * Create a new Raft engine instance.
 	 *
 	 * @return void
 	 */

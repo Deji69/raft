@@ -1,5 +1,5 @@
 <?php
-namespace App\Core\PHTML\Parser\Node;
+namespace Raft\Parser\Node;
 
 interface OutputInterface
 {

@@ -1,12 +1,12 @@
 <?php
-namespace App\Core\PHTML;
+namespace Raft;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use App\Core\PHTML\Lexer\Token;
-use App\Core\PHTML\Parser\Parser;
+use Raft\Lexer\Token;
+use Raft\Parser\Parser;
 use Illuminate\Filesystem\Filesystem;
-use App\Core\PHTML\Exceptions\SyntaxError;
+use Raft\Exceptions\SyntaxError;
 use Illuminate\View\Compilers\CompilerInterface;
 use Illuminate\View\Compilers\Compiler as BaseCompiler;
 

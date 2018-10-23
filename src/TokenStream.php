@@ -1,9 +1,9 @@
 <?php
-namespace App\Core\PHTML;
+namespace Raft;
 
-use App\Core\PHTML\Source;
-use App\Core\PHTML\Lexer\Token;
-use App\Core\PHTML\Exception\SyntaxError;
+use Raft\Source;
+use Raft\Lexer\Token;
+use Raft\Exception\SyntaxError;
 
 /**
  * Represents a PHTML token

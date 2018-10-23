@@ -1,5 +1,5 @@
 <?php
-namespace App\Core\PHTML\Exception;
+namespace Raft\Exception;
 
 /**
  * InternalError is thrown when an unexpected syntax is overlooked

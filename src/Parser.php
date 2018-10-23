@@ -1,19 +1,19 @@
 <?php
-namespace App\Core\PHTML;
+namespace Raft;
 
-use App\Core\PHTML\Parser\Node;
-use App\Core\PHTML\Parser\Node\Raw;
-use App\Core\PHTML\Parser\Node\Body;
-use App\Core\PHTML\Parser\Node\Block;
-use App\Core\PHTML\Parser\Node\RawPHP;
-use App\Core\PHTML\Parser\Node\Layout;
-use App\Core\PHTML\Parser\Node\Template;
-use App\Core\PHTML\Parser\Node\Expression;
-use App\Core\PHTML\Parser\Node\Expression\Variable;
-use App\Core\PHTML\Parser\Node\Output as OutputNode;
-use App\Core\PHTML\Parser\ExpressionParser;
-use App\Core\PHTML\Exception\SyntaxError;
-use App\Core\PHTML\Exception\InternalError;
+use Raft\Parser\Node;
+use Raft\Parser\Node\Raw;
+use Raft\Parser\Node\Body;
+use Raft\Parser\Node\Block;
+use Raft\Parser\Node\RawPHP;
+use Raft\Parser\Node\Layout;
+use Raft\Parser\Node\Template;
+use Raft\Parser\Node\Expression;
+use Raft\Parser\Node\Expression\Variable;
+use Raft\Parser\Node\Output as OutputNode;
+use Raft\Parser\ExpressionParser;
+use Raft\Exception\SyntaxError;
+use Raft\Exception\InternalError;
 
 class Parser
 {

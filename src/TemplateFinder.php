@@ -1,5 +1,5 @@
 <?php
-namespace App\Core\PHTML;
+namespace Raft;
 
 use InvalidArgumentException;
 use Illuminate\Support\Str;

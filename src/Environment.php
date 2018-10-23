@@ -1,5 +1,5 @@
 <?php
-namespace App\Core\PHTML;
+namespace Raft;
 
 use Closure;
 use Illuminate\Contracts\View\Engine;

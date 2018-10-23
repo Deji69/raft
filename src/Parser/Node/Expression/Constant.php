@@ -1,8 +1,8 @@
 <?php
-namespace App\Core\PHTML\Parser\Node\Expression;
+namespace Raft\Parser\Node\Expression;
 
-use App\Core\PHTML\Compiler;
-use App\Core\PHTML\Parser\Node\Expression;
+use Raft\Compiler;
+use Raft\Parser\Node\Expression;
 
 class Constant extends Expression
 {

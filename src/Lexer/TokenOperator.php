@@ -1,5 +1,5 @@
 <?php
-namespace App\Core\PHTML\Lexer;
+namespace Raft\Lexer;
 
 trait TokenOperator
 {

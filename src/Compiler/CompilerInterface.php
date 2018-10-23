@@ -1,5 +1,5 @@
 <?php
-namespace App\Core\PHTML\Compiler;
+namespace Raft\Compiler;
 
 interface CompilerInterface
 {

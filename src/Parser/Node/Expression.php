@@ -1,7 +1,7 @@
 <?php
-namespace App\Core\PHTML\Parser\Node;
+namespace Raft\Parser\Node;
 
-use App\Core\PHTML\Parser\Node;
+use Raft\Parser\Node;
 
 /**
  * Abstract class for all nodes that represents an expression.

@@ -1,5 +1,5 @@
 <?php
-namespace App\Core\PHTML;
+namespace Raft;
 
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;

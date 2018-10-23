@@ -1,9 +1,9 @@
 <?php
-namespace App\Core\PHTML\Parser\Node;
+namespace Raft\Parser\Node;
 
-use App\Core\PHTML\Compiler;
-use App\Core\PHTML\Parser\Node;
-use App\Core\PHTML\Parser\Node\Block;
+use Raft\Compiler;
+use Raft\Parser\Node;
+use Raft\Parser\Node\Block;
 
 /**
  * Represents a block call node.

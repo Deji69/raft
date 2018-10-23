@@ -1,7 +1,7 @@
 <?php
-namespace App\Core\PHTML\Lexer;
+namespace Raft\Lexer;
 
-use App\Core\PHTML\Source;
+use Raft\Source;
 
 /**
  * Represents a PHTML token

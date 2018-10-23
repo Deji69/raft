@@ -1,11 +1,11 @@
 <?php
-namespace App\Core\PHTML\Parser;
+namespace Raft\Parser;
 
-use App\Core\PHTML\Engine;
-use App\Core\PHTML\Parser;
-use App\Core\PHTML\Lexer\Token;
-use App\Core\PHTML\TokenStream;
-use App\Core\PHTML\Exception\InternalError;
+use Raft\Engine;
+use Raft\Parser;
+use Raft\Lexer\Token;
+use Raft\TokenStream;
+use Raft\Exception\InternalError;
 
 class ExpressionParser
 {

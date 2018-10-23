@@ -1,8 +1,8 @@
 <?php
-namespace App\Core\PHTML\Exception;
+namespace Raft\Exception;
 
 use Exception;
-use App\Core\PHTML\Source;
+use Raft\Source;
 
 class Error extends Exception
 {

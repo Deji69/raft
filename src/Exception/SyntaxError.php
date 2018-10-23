@@ -1,5 +1,5 @@
 <?php
-namespace App\Core\PHTML\Exception;
+namespace Raft\Exception;
 
 class SyntaxError extends Error
 {

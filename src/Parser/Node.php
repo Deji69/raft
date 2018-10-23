@@ -1,13 +1,13 @@
 <?php
-namespace App\Core\PHTML\Parser;
+namespace Raft\Parser;
 
 use Countable;
 use ArrayAccess;
 use ArrayIterator;
 use LogicException;
 use IteratorAggregate;
-use App\Core\PHTML\Parser;
-use App\Core\PHTML\Compiler;
+use Raft\Parser;
+use Raft\Compiler;
 use InvalidArgumentException;
 
 class Node implements ArrayAccess, Countable, IteratorAggregate

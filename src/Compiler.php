@@ -1,12 +1,12 @@
 <?php
-namespace App\Core\PHTML;
+namespace Raft;
 
 use Closure;
 use InvalidArgumentException;
-use App\Core\PHTML\Engine;
-use App\Core\PHTML\Parser\Node;
-use App\Core\PHTML\Parser\TokenStream;
-use App\Core\PHTML\Exceptions\SyntaxError;
+use Raft\Engine;
+use Raft\Parser\Node;
+use Raft\Parser\TokenStream;
+use Raft\Exceptions\SyntaxError;
 
 class Compiler
 {
