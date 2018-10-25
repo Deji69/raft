@@ -5,12 +5,25 @@ use Exception;
 use Throwable;
 use ErrorException;
 use Raft\Parser;
+use Raft\Source;
 use Raft\Parser\Node;
 use Illuminate\View\Compilers\CompilerInterface;
 use Symfony\Component\Debug\Exception\FatalThrowableError;
 
 class Engine
 {
+	/**
+	 * Active engine instance
+	 *
+	 * @var Engine
+	 */
+	static protected $engine;
+
+	/**
+	 * @var Source
+	 */
+	protected $source;
+
 	/**
 	 * @var Lexer
 	 */
@@ -33,11 +46,39 @@ class Engine
 
 	/**
 	 * Create a new Raft engine instance.
-	 *
-	 * @return void
 	 */
 	public function __construct()
 	{
+		if (!isset(static::$engine)) {
+			static::setActiveEngine($this);
+		}
+	}
+
+	public function __destruct()
+	{
+		if (static::$engine === $this) {
+			static::$engine = null;
+		}
+	}
+
+	/**
+	 * Sets the engine currently running tasks.
+	 *
+	 * @param Engine $engine
+	 */
+	public static function setActiveEngine(Engine $engine)
+	{
+		static::$engine = $engine;
+	}
+
+	/**
+	 * Gets the engine currently running tasks.
+	 *
+	 * @param Engine|null $engine
+	 */
+	public static function getActiveEngine(): ?Engine
+	{
+		return static::$engine;
 	}
 
 	/**
@@ -45,7 +86,7 @@ class Engine
 	 *
 	 * @return Environment
 	 */
-	public function getEnvironment()
+	public function getEnvironment(): Environment
 	{
 		if (!isset($this->environment)) {
 			$this->environment = new Environment($this);
@@ -61,6 +102,16 @@ class Engine
 	public function setEnvironment(Environment $environment)
 	{
 		$this->environment = $environment;
+	}
+
+	/**
+	 * Gets source object currently being worked on
+	 *
+	 * @return Source
+	 */
+	public function getSource(): Source
+	{
+		return $this->source;
 	}
 
 	/**
@@ -143,6 +194,7 @@ class Engine
 	 */
 	public function tokenize(Source $source): TokenStream
 	{
+		$this->source = $source;
 		return $this->getLexer()->tokenize($source);
 	}
 
@@ -155,15 +207,17 @@ class Engine
 	 *
 	 * @throws Exception\SyntaxError When the code is syntactically wrong
 	 */
-	public function parse(TokenStream $tokens): Node
+	public function parse(TokenStream $tokenStream): Node
 	{
-		return $this->getParser()->parse($tokens);
+		$this->source = $tokens->getSource();
+		return $this->getParser()->parse($tokenStream);
 	}
 
 	/**
 	 * Compiles a node into PHP code.
 	 *
 	 * @param  Node  $node
+	 *
 	 * @return string 	The compiled PHP code
 	 */
 	public function compile(Node $node): string
@@ -175,6 +229,7 @@ class Engine
 	 * Check whether the given template file needs recompiling
 	 *
 	 * @param  string  $path
+	 *
 	 * @return bool
 	 */
 	public function isExpired(string $path): bool

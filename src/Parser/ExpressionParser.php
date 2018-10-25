@@ -3,7 +3,7 @@ namespace Raft\Parser;
 
 use Raft\Engine;
 use Raft\Parser;
-use Raft\Lexer\Token;
+use Raft\Token;
 use Raft\TokenStream;
 use Raft\Exception\InternalError;
 

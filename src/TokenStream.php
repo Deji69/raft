@@ -1,8 +1,8 @@
 <?php
 namespace Raft;
 
+use Raft\Token;
 use Raft\Source;
-use Raft\Lexer\Token;
 use Raft\Exception\SyntaxError;
 
 /**
@@ -60,7 +60,7 @@ class TokenStream
 	 *
 	 * @return bool
 	 */
-	public function isEnd()
+	public function isEOF(): bool
 	{
 		return $this->current->is('eof');
 	}
@@ -80,18 +80,16 @@ class TokenStream
 	/**
 	 * Sets the pointer to the next token and returns the current one.
 	 *
-	 * @param bool  $skipWhitespace
+	 * @param  bool $skipWhitespace
 	 *
 	 * @return Token
 	 *
 	 * @throws InternalErrorException If there is no more token
 	 */
-	public function next(bool $skipWhitespace = true)
+	public function next(bool $skipWhitespace = true): Token
 	{
 		$token = $this->current;
 		if (!isset($this->tokens[++$this->position])) {
-			var_dump($this->position);
-			var_dump($this->tokens);
 			throw new SyntaxError('Unexpected end of template.', $this->tokens[$this->position - 1]->getLine(), $this->source);
 		}
 		$this->current = $this->tokens[$this->position];
@@ -102,21 +100,9 @@ class TokenStream
 	}
 
 	/**
-	 * Tests a token, sets the pointer to the next one and returns it or throws a syntax error.
-	 *
-	 * @return Token|null The next token if the condition is true, null otherwise
-	 */
-	public function nextIf($primary, $secondary = null)
-	{
-		if ($this->tokens[$this->position]->is($primary, $secondary)) {
-			return $this->next();
-		}
-	}
-
-	/**
 	 * Returns an upcoming token.
 	 *
-	 * @param int $number
+	 * @param  int $number
 	 *
 	 * @return Token
 	 */

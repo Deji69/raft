@@ -3,7 +3,7 @@ namespace Raft;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use Raft\Lexer\Token;
+use Raft\Token;
 use Raft\Parser\Parser;
 use Illuminate\Filesystem\Filesystem;
 use Raft\Exceptions\SyntaxError;

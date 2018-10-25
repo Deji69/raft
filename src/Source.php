@@ -4,83 +4,139 @@ namespace Raft;
 class Source
 {
 	/**
-	 * Source code.
-	 *
 	 * @var string
 	 */
 	protected $code;
 
 	/**
-	 * Name of source file.
-	 *
 	 * @var string
 	 */
 	protected $name;
 
 	/**
-	 * Path of source file.
-	 *
 	 * @var string
 	 */
 	protected $path;
 
 	/**
-	 * Line offsets.
-	 *
-	 * @var int[]
+	 * @var string[]
 	 */
-	protected $lineOffsets;
+	protected $lines = [];
 
 	/**
-	 * @param string $code 	The template source code.
-	 * @param string $name 	The template logical name.
-	 * @param string $path 	The filesystem path of the template.
+	 * @var int[]
+	 */
+	protected $lineOffsets = [];
+
+	/**
+	 * @var int[]
+	 */
+	protected $lineCharCount = [];
+
+	/**
+	 * @param string $code The template source code.
+	 * @param string $name The template logical name.
+	 * @param string $path The filesystem path of the template.
 	 */
 	public function __construct(string $code, string $name, string $path = '')
 	{
 		$this->code = $code;
 		$this->name = $name;
 		$this->path = $path;
-		$this->lineOffsets[] = 0;
-		if (preg_match_all('#\n#', $this->code, $matches, PREG_OFFSET_CAPTURE)) {
-			foreach ($matches[0] as $match) {
-				$this->lineOffsets[] = $match[1] + 1;
-			}
+
+		$lines = preg_split('#\n#u', $code, 10000000, PREG_SPLIT_OFFSET_CAPTURE);
+		$mbOffset = 0;
+
+		foreach ($lines as $line) {
+			$this->lines[] = $line[0];
+			$this->lineOffsets[] = $line[1];
+			$this->lineCharCount[] = $mbOffset;
+			$mbOffset += mb_strwidth($line[0]) + 1;
 		}
 	}
 
+	/**
+	 * Returns the source code.
+	 *
+	 * @return string
+	 */
 	public function getCode(): string
 	{
 		return $this->code;
 	}
 
+	/**
+	 * Returns the logical name of the source.
+	 *
+	 * @return string
+	 */
 	public function getName(): string
 	{
 		return $this->name;
 	}
 
-	public function getPath(): string
+	/**
+	 * Returns the file path of the source, if any.
+	 *
+	 * @return string|null
+	 */
+	public function getPath(): ?string
 	{
 		return $this->path;
 	}
 
+	/**
+	 * Gets a unicode range of the source code.
+	 *
+	 * @param  int $start
+	 * @param  int $length
+	 * @return string
+	 */
 	public function getToken(int $start, int $length): string
 	{
 		return mb_substr($this->code, $start, $length);
 	}
 
-	public function getOffsetForLine(int $line): int
+	/**
+	 * Gets the source offset for the line.
+	 *
+	 * @param  int $line
+	 * @return int|null
+	 */
+	public function getOffsetForLine(int $line): ?int
 	{
-		return isset($this->lineOffsets[$line - 1]) ? $this->lineOffsets[$line - 1] : false;
+		return isset($this->lineOffsets[$line - 1]) ? $this->lineOffsets[$line - 1] : null;
 	}
 
+	/**
+	 * Gets the line number of the offset.
+	 *
+	 * @param  int $offset
+	 * @return int
+	 */
 	public function getLineForOffset(int $offset): int
 	{
 		foreach ($this->lineOffsets as $index => $v) {
-			if ($v >= $offset) {
+			if ($v > $offset) {
 				return $index;
 			}
 		}
-		return count($this->lineOffsets) + 1;
+		return count($this->lineOffsets);
+	}
+
+	/**
+	 * Gets the line column number of the offset.
+	 *
+	 * @param  int $offset
+	 * @return int
+	 */
+	public function getColumnForOffset(int $offset): int
+	{
+		if ($line = $this->getLineForOffset($offset)) {
+			$lineOffset = $this->getOffsetForLine($line);
+			$portion = substr($this->lines[$line - 1], 0, $offset - $lineOffset);
+			return mb_strlen($portion) + 1;
+		}
+		return $offset + 1;
 	}
 }

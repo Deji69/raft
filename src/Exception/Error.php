@@ -25,11 +25,11 @@ class Error extends Exception
 	 * By default, automatic guessing is enabled.
 	 *
 	 * @param string 				$message 	The error message
-	 * @param int 					$lineno 	The template line where the error occurred
+	 * @param int|null				$lineno 	The template line where the error occurred
 	 * @param Source|string|null 	$source 	The source context where the error occurred
 	 * @param Exception 			$previous 	The previous exception
 	 */
-	public function __construct(string $message, int $lineno = -1, $source = null, Exception $previous = null)
+	public function __construct(string $message, int $lineno = null, $source = null, Exception $previous = null)
 	{
 		parent::__construct('', 0, $previous);
 

@@ -12,5 +12,7 @@ class EngineTest extends TestCase
 		m::close();
 	}
 
-
+	public function testDependencyResolution()
+	{
+	}
 }
