@@ -78,6 +78,9 @@ class Engine
 	 */
 	public static function getActiveEngine(): ?Engine
 	{
+		if (static::$engine === null) {
+			new static;
+		}
 		return static::$engine;
 	}
 
@@ -112,6 +115,16 @@ class Engine
 	public function getSource(): Source
 	{
 		return $this->source;
+	}
+
+	/**
+	 * Set the source object currently being worked on
+	 *
+	 * @param Source
+	 */
+	public function setSource(Source $source)
+	{
+		$this->source = $source;
 	}
 
 	/**

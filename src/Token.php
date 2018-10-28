@@ -14,10 +14,12 @@ class Token
 	const EOF			= 'eof';		// indicates the end of a template
 	const RAW			= 'raw';		// used for unparsed template content
 	const PHP			= 'php';		// used for blocks of PHP code
+	const BEGIN			= 'begin';		// indicates the beginning of a tag e.g. {{
+	const END			= 'end';		// indicates the end of a tag e.g. }}
 	const WHITESPACE	= 'whitespace';	// indicates horizontal whitespace blocks
 	const NEWLINE		= 'newline';	// indicates blocks of newlines and lines with only whitespace
 	const IDENTIFIER	= 'identifier';	// used for eligible names of vars, funcs, etc.
-	const TEXT			= 'text';		// used for text strings like 'this' and "this"
+	const STRING		= 'string';		// used for text strings like 'this' and "this"
 	const NUMBER		= 'number';
 	const DELIMITER		= 'delimiter';
 	const OPERATOR		= 'operator';
@@ -29,7 +31,7 @@ class Token
 	protected $type;
 
 	/**
-	 * @var string|null
+	 * @var mixed|null
 	 */
 	protected $value;
 
@@ -42,10 +44,10 @@ class Token
 
 	/**
 	 * @param string	$type
-	 * @param string	$value
+	 * @param mixed		$value
 	 * @param int		$offset
 	 */
-	public function __construct(string $type, string $value = null, int $offset = null)
+	public function __construct(string $type, $value = null, int $offset = null)
 	{
 		$this->type = $type;
 		$this->value = $value;
@@ -61,9 +63,12 @@ class Token
 	{
 		if ($line = $this->getLine()) {
 			$column = $this->getColumn();
+			if (!is_string($this->value)) {
+				return sprintf('%3d,%3d %s', $line, $column ?? 0, strtoupper($this->type));
+			}
 			return sprintf('%3d,%3d %s %s', $line, $column ?? 0, strtoupper($this->type), $this->value);
 		}
-		return sprintf('%3d %s %s', $this->offset, strtoupper($this->type), $this->source);
+		return sprintf('%3d %s %s', $this->offset, strtoupper($this->type), $this->value);
 	}
 
 	/**
@@ -79,7 +84,7 @@ class Token
 	/**
 	 * Gets the value of this token.
 	 *
-	 * @return string
+	 * @return string|null
 	 */
 	public function getValue(): ?string
 	{
@@ -89,9 +94,9 @@ class Token
 	/**
 	 * Get the offset of this token.
 	 *
-	 * @return int
+	 * @return int|null
 	 */
-	public function getOffset(): int
+	public function getOffset(): ?int
 	{
 		return $this->offset;
 	}
@@ -104,7 +109,7 @@ class Token
 	public function getLine(): ?int
 	{
 		$engine = Engine::getActiveEngine();
-		if ($engine) {
+		if ($engine && isset($this->offset)) {
 			if ($source = $engine->getSource()) {
 				return $source->getLineForOffset($this->offset);
 			}
@@ -120,7 +125,7 @@ class Token
 	public function getColumn(): ?int
 	{
 		$engine = Engine::getActiveEngine();
-		if ($engine) {
+		if ($engine && isset($this->offset)) {
 			if ($source = $engine->getSource()) {
 				return $source->getColumnForOffset($this->offset);
 			}
@@ -145,6 +150,6 @@ class Token
 			}
 			return false;
 		}
-		return $this->type === $type && ($value === null || $this->code == $value);
+		return $this->type === $type && ($value === null || $this->value == $value);
 	}
 }

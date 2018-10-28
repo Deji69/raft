@@ -86,15 +86,31 @@ class Source
 	}
 
 	/**
-	 * Gets a unicode range of the source code.
+	 * Gets a range of the source code or null if the requested range is invalid.
 	 *
 	 * @param  int $start
 	 * @param  int $length
-	 * @return string
+	 * @return string|null
 	 */
-	public function getToken(int $start, int $length): string
+	public function getToken(int $start, int $length): ?string
 	{
-		return mb_substr($this->code, $start, $length);
+		if ($start < 0) {
+			return null;
+		}
+		if ($start + $length > $this->getLength()) {
+			return null;
+		}
+		return substr($this->code, $start, $length);
+	}
+
+	/**
+	 * Gets the total size of the source code in unicode characters.
+	 *
+	 * @return int
+	 */
+	public function getLength(): int
+	{
+		return strlen($this->code);
 	}
 
 	/**

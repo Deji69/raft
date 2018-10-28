@@ -16,6 +16,9 @@ trait TokenOperator
 			'-',		// --
 		],
 		'*' => [		// *
+			'*' => [	// **
+				'=',	// **=
+			],
 			'=',		// *=
 		],
 		'/' => [		// /
@@ -53,15 +56,23 @@ trait TokenOperator
 			'|',		// ||
 			'=',		// |=
 		],
-		'?' => [		// ?
-			'?',		// ??
-		],
+		'??',			// ??
+		'?:',			// ?:
+		'and',			// and
+		'or',			// or
 	];
 
 	public function lexOperator($src, $pos) {
 		$table = static::$operatorTable;
 		$begin = $pos;
-		while (true) {
+		do {
+			for ($i = 0; isset($table[$i]); ++$i) {
+				$l = strlen($table[$i]);
+				if (substr($src, $pos, $l) == $table[$i]) {
+					return $pos + $l;
+				}
+			}
+
 			if (isset($table[$src[$pos]])) {
 				$table = $table[$src[$pos]];
 				++$pos;
@@ -71,7 +82,7 @@ trait TokenOperator
 				return ++$pos;
 			}
 			break;
-		}
+		} while (is_array($table));
 		return $begin != $pos ? $pos : false;
 	}
 }

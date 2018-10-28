@@ -4,7 +4,7 @@ namespace Raft\Lexer;
 trait TokenSeparator
 {
 	protected $separatorTable = [
-		':', ',', '.'
+		'?', ':', ',', '.',
 	];
 
 	public function lexSeparator($src, $pos) {

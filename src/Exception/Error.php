@@ -7,6 +7,7 @@ use Raft\Source;
 class Error extends Exception
 {
 	protected $lineno;
+	protected $column;
 	protected $name;
 	protected $rawMessage;
 	protected $sourcePath;
@@ -24,27 +25,24 @@ class Error extends Exception
 	 *
 	 * By default, automatic guessing is enabled.
 	 *
-	 * @param string 				$message 	The error message
-	 * @param int|null				$lineno 	The template line where the error occurred
-	 * @param Source|string|null 	$source 	The source context where the error occurred
-	 * @param Exception 			$previous 	The previous exception
+	 * @param string 		$message 	The error message
+	 * @param int|null		$lineno 	The template cursor position where the error occurred
+	 * @param Source|null 	$source 	The source context where the error occurred
+	 * @param Exception 	$previous 	The previous exception
 	 */
-	public function __construct(string $message, int $lineno = null, $source = null, Exception $previous = null)
+	public function __construct(string $message, int $offset = null, Source $source = null, Exception $previous = null)
 	{
 		parent::__construct('', 0, $previous);
 
-		if (null === $source) {
-			$name = null;
-		} elseif (!$source instanceof Source) {
-			$name = $source;
-		} else {
-			$name = $source->getName();
-			$this->sourceCode = $source->getCode();
-			$this->sourcePath = $source->getPath();
+		if ($offset !== null) {
+			$this->lineno = $source->getLineForOffset($offset);
+			$this->column = $source->getColumnForOffset($offset);
 		}
 
-		$this->lineno = $lineno;
-		$this->name = $name;
+		$this->source = $source;
+		$this->name = $source->getName();
+		$this->sourceCode = $source->getCode();
+		$this->sourcePath = $source->getPath();
 		$this->rawMessage = $message;
 
 		$this->updateRepr();
@@ -108,7 +106,12 @@ class Error extends Exception
 		$this->updateRepr();
 	}
 
-	public function appendMessage($rawMessage)
+	/**
+	 * Appends a string to the error message.
+	 *
+	 * @param  string $rawMessage
+	 */
+	public function appendMessage(string $rawMessage)
 	{
 		$this->rawMessage .= $rawMessage;
 		$this->updateRepr();
@@ -121,7 +124,6 @@ class Error extends Exception
 		if ($this->sourcePath && $this->lineno > 0) {
 			$this->file = $this->sourcePath;
 			$this->line = $this->lineno;
-
 			return;
 		}
 
@@ -139,15 +141,15 @@ class Error extends Exception
 
 		if ($this->name) {
 			if (is_string($this->name) || (is_object($this->name) && method_exists($this->name, '__toString'))) {
-				$name = sprintf('"%s"', $this->name);
+				$name = '"'.$this->name.'"';
 			} else {
 				$name = json_encode($this->name);
 			}
-			$this->message .= sprintf(' in %s', $name);
+			$this->message .= ' in '.$name;
 		}
 
 		if ($this->lineno && $this->lineno >= 0) {
-			$this->message .= sprintf(' at line %d', $this->lineno);
+			$this->message .= ' on line '.$this->lineno;
 		}
 
 		if ($dot) {

@@ -163,9 +163,9 @@ class Parser
 								$lib = $lib[$token->get()];
 							} else {
 								if ($whole) {
-									throw new SyntaxError('\''.$token->get().'\' is not a member of \''.$whole.'\'', $token->getLine(), $token->getSource());
+									throw new SyntaxError('\''.$token->get().'\' is not a member of \''.$whole.'\'', $token->getOffset(), $token->getSource());
 								} else {
-									throw new SyntaxError('Unexpected \''.$token->get().'\'', $token->getLine(), $token->getSource());
+									throw new SyntaxError('Unexpected \''.$token->get().'\'', $token->getOffset(), $token->getSource());
 								}
 							}
 							$whole .= ($whole ? '.' : '').$token->get();
@@ -210,19 +210,21 @@ class Parser
 		$cmd = $stream->expect('identifier');
 		$stream->expect('separator', ':');
 		$id = $stream->expect('identifier');
-		$lineno = $cmd->getLine();
+		$pos = $cmd->getOffset();
+		$source = $stream->getSource();
+		$lineno = $source->getLineForOffset($pos);
 
 		switch ($cmd->get()) {
 			case 'template':
 				if ($lineno != 1) {
-					throw new SyntaxError('The layout command must appear on the first line.', $lineno, $stream->getSourceContext());
+					throw new SyntaxError('The layout command must appear on the first line.', $pos, $source);
 				}
 				$this->type = $id->get();
 				return false;
 			case 'begin':
 				$name = $id->get();
 				if ($this->hasBlock($name)) {
-					throw new SyntaxError('The block \''.$name.'\' has already been defined line '.$this->getBlock($name)->getTemplateLine().'.', $stream->current->getLine(), $stream->getSource());
+					throw new SyntaxError('The block \''.$name.'\' has already been defined line '.$this->getBlock($name)->getTemplateLine().'.', $pos, $source);
 				}
 				$this->pushBlockStack($id->get());
 				return false;
@@ -230,7 +232,7 @@ class Parser
 				$block = $this->popBlockStack();
 				$name = $block['name'];
 				if ($id->get() != $name) {
-					throw new SyntaxError('End of block mismatch, expected \''.$name.'\' defined on line '.$this->getBlock($name)->getTemplateLine().' but found \''.$id->get().'\'', $lineno);
+					throw new SyntaxError('End of block mismatch, expected \''.$name.'\' defined on line '.$this->getBlock($name)->getTemplateLine().' but found \''.$id->get().'\'', $pos, $source);
 				}
 				$this->setBlock($name, $block = new Block($name, new Body($block['nodes']), $lineno));
 				return new Node\BlockReference($name, $block, $lineno, 'block');

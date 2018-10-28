@@ -1,61 +1,52 @@
 <?php
 namespace Raft;
 
-use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 use Raft\Token;
-use Raft\Parser\Parser;
-use Illuminate\Filesystem\Filesystem;
-use Raft\Exceptions\SyntaxError;
-use Illuminate\View\Compilers\CompilerInterface;
-use Illuminate\View\Compilers\Compiler as BaseCompiler;
+use Raft\Engine;
+use Raft\TokenStream;
+use Raft\Exception\SyntaxError;
+use InvalidArgumentException;
 
+/**
+ * Takes template code and converts it into a TokenStream.
+ */
 class Lexer
 {
 	// order affects lexer priority
 	use Lexer\TokenWhiteSpace,
 		Lexer\TokenNewLine,
+		Lexer\TokenNumber,
+		Lexer\TokenOperator,
 		Lexer\TokenIdentifier,
 		Lexer\TokenString,
-		Lexer\TokenOperator,
 		Lexer\TokenSeparator,
 		Lexer\TokenDelimiter;
 
 	/**
-	 * The ssource file currently being lexed.
+	 * The source file currently being lexed.
 	 *
 	 * @var Source
 	 */
 	protected $source;
 
 	/**
-	 * The template parser
-	 *
-	 * @var \App\FML\Parser\Parser
-	 */
-	protected $parser;
-
-	/**
-	 * The compiled template output
-	 *
-	 * @var string
-	 */
-	protected $output;
-
-	/**
-	 * Ouput tokens
-	 *
 	 * @var Token[]
 	 */
 	protected $tokens = [];
 
 	/**
-	 * Delimiters
-	 *
+	 * @var string[]
+	 */
+	protected $tokenTypes = [];
+
+	/**
 	 * @var array
 	 */
 	protected $delimiters = ['{{', '}}'];
 
+	/**
+	 * @param Engine $engine
+	 */
 	public function __construct(Engine $engine)
 	{
 		$uses = class_uses(static::class);
@@ -63,80 +54,105 @@ class Lexer
 		foreach ($uses as $trait) {
 			$arr = explode('\\', $trait);
 			$type = end($arr);
-			if (Str::startsWith($type, 'Token')) {
+			if (strStartsWith($type, 'Token')) {
 				$this->tokenTypes[] = substr($type, 5);
 			}
 		}
 	}
 
+	/**
+	 * Add a token to the output stream.
+	 *
+	 * @param string 	$type
+	 * @param int 		$cursor
+	 * @param int 		$length
+	 */
 	public function addToken(string $type, int $cursor, int $length)
 	{
-		$this->tokens[] = new Token($this->source, $type, $cursor, $length);
-	}
-
-	public function addRawToken(string $type, int $cursor, int $length, string $code)
-	{
-		$this->tokens[] = new Token($this->source, $type, $cursor, $length, $code);
+		$this->tokens[] = new Token($type, $this->source->getToken($cursor, $length), $cursor);
 	}
 
 	/**
-	 * Compile the given PHTML template contents.
+	 * Add a token with custom data to the output stream.
 	 *
-	 * @param  string  $value
-	 * @return string
+	 * @param string 	$type
+	 * @param mixed 	$data
+	 * @param int 		$cursor
+	 * @param int 		$length
 	 */
-	public function tokenize($source)
+	public function addRawToken(string $type, $data, int $cursor, int $length)
 	{
+		$this->tokens[] = new Token($type, $data, $cursor);
+	}
+
+	/**
+	 * Lex the given template contents.
+	 *
+	 * @param  Source|string  $value
+	 * @return TokenStream
+	 */
+	public function tokenize($source): TokenStream
+	{
+		if (is_string($source)) {
+			$source = new Source($source, 'noname');
+		} elseif (!$source instanceof Source) {
+			throw new InvalidArgumentException('Expected string or instance of '.Source::class);
+		}
+
+		Engine::getActiveEngine()->setSource($source);
+
 		$this->source = $source;
 		$this->tokens = [];
 
 		$code = $this->source->getCode();
 		$npos = strlen($code);
 		$str = '';
-		$phpOpen = false;
-		$phpLine = 0;
 		$offset = 0;
 		$phpJustOpened = false;
 
-		foreach (token_get_all($code) as $token) {
+		$zendTokens = token_get_all($code);
+
+		for ($i = 0; $i < count($zendTokens); ++$i) {
+			$token = $zendTokens[$i];
+
+			// raw PHP blocks
 			if ($token[0] == T_OPEN_TAG) {
+				$phpTokens = [$token];
 				$phpOpen = true;
-				//$offset = $this->source->getOffsetForLine($token[2]);
-			} else if ($token[0] == T_CLOSE_TAG) {
-				$this->addRawToken('php', $offset, strlen($str), $str);
-				$str = '';
-				$phpOpen = false;
-				$phpLine = $token[2];
-				$offset += strlen($token[1]);
+				$phpStartCursor = $this->source->getOffsetForLine($token[2]);
+				$phpLength = strlen($token[1]);
+
+				while (++$i < count($zendTokens)) {
+					$token = $zendTokens[$i];
+					$phpTokens[] = $token;
+					$phpLength += strlen($token[1]);
+
+					if ($token[0] == T_CLOSE_TAG) {
+						$phpOpen = false;
+						break;
+					}
+				}
+
+				$this->addRawToken(Token::PHP, $phpTokens, $phpStartCursor, $phpLength);
+				$offset += $phpLength;
 				continue;
 			}
-			if ($phpOpen) {
-				if (is_string($token)) {
-					$str .= $token;
-					$offset += strlen($token);
-				} else {
-					if ($token[0] != T_OPEN_TAG) {
-						if ($token[0] == T_VARIABLE && $token[1] !== '$this') {
-							$str .= '$this->vars[\''.substr($token[1], 1).'\']';
-						} else {
-							$str .= $token[1];
-						}
-					} else {
-						$phpJustOpened = true;
-					}
-					$offset += strlen($token[1]);
-					$phpLine = $token[2];
-				}
-			} else {
-				$this->tokenizeString($token[1], $offset);
-				$offset += strlen($token[1]);
-			}
+
+			$this->tokenizeString($token[1], $offset);
+			$offset += strlen($token[1]);
 		}
 
-		$this->addToken('eof', $npos, 0);
-		return new TokenStream($this->tokens);
+		$this->addToken(Token::EOF, $npos, 0);
+		return new TokenStream($this->tokens, $this->source);
 	}
 
+	/**
+	 * Tokenizes template contents.
+	 *
+	 * @param  string 	$str
+	 * @param  int 		$offset
+	 * @return void
+	 */
 	public function tokenizeString(string $str, int $offset = 0)
 	{
 		$endPos = strlen($str);
@@ -146,30 +162,23 @@ class Lexer
 
 		for ($pos = 0; $pos < $endPos; $pos = $nextPos, $nextPos = $endPos) {
 			$delimStart = strpos($str, $this->delimiters[0], $pos);
+
 			if ($delimStart !== false) {
 				$delimEnd = strpos($str, $this->delimiters[1], $pos + $delimStartLength);
+
 				if ($delimEnd !== false) {
 					$expression = substr($str, $delimStart + $delimStartLength, $delimEnd - $delimStart - $delimStartLength);
 					$length = $delimStart - $pos;
+
 					if ($length) {
-						$this->addToken('raw', $pos + $offset, $length);
+						$this->addToken(Token::RAW, $pos + $offset, $length);
 					}
+
+					$this->addToken(Token::BEGIN, $offset + $delimStart, $delimStartLength);
 					$this->lex($expression, $offset + $delimStart + $delimStartLength);
+					$this->addToken(Token::END, $offset + $delimEnd, $delimEndLength);
 					$delimEnd += $delimEndLength;
 					$pos = $delimEnd;
-					/*if (preg_match('#\G\s*#', $str, $m, PREG_OFFSET_CAPTURE, $pos)) {
-						$pos += strlen($m[0][0]);
-					}
-					if ($str[$pos] == '\r' || $str[$pos] == '\n') {
-						if ($str[$pos] == '\r') {
-							$pos += 2;
-						} else {
-							$pos += 1;
-						}
-						if ($str[$pos] == '\t') {
-							$pos += 1;
-						}
-					}*/
 					$nextPos = $pos;
 					continue;
 				}
@@ -177,13 +186,13 @@ class Lexer
 
 			$length = $nextPos - $pos;
 			if ($length) {
-				$this->addToken('raw', $pos + $offset, $length);
+				$this->addToken(Token::RAW, $pos + $offset, $length);
 			}
 		}
 	}
 
 	/**
-	 * Lexes the given PHTML expression
+	 * Lexes a Raft block.
 	 *
 	 * @param string $expr
 	 * @return void
@@ -192,16 +201,21 @@ class Lexer
 	{
 		$endPos = 0;
 		$len = strlen($expr);
+		if (!$len) {
+			return;
+		}
 		do {
 			$pos = $endPos;
 			if ($pos > $len) {
 				break;
 			}
+			$unknown = true;
 			foreach ($this->tokenTypes as $type) {
 				$endPos = $this->{"lex{$type}"}($expr, $pos);
 				if ($endPos > $pos) {
 					$type = strtolower($type);
 					if ($type == 'whitespace') {
+						$unknown = false;
 						break;
 					}
 					if ($type == 'string') {
@@ -209,24 +223,13 @@ class Lexer
 					} else {
 						$this->addToken($type, $pos + $offset, $endPos - $pos);
 					}
+					$unknown = false;
 					break;
 				}
 			}
+			if ($unknown) {
+				throw new SyntaxError('Unexpected \''.substr($expr, $pos).'\'', $pos, $this->source);
+			}
 		} while($endPos > $pos && $endPos < $len);
-	}
-
-	private static function debugGetTokenConstant($id) {
-		static $tokenConstants = [];
-		if (empty($tokenConstants)) {
-			$tokenConstants = array_filter(
-				get_defined_constants(),
-				function ($v, $k) {
-					return substr($k, 0, 2) === 'T_';
-				},
-				ARRAY_FILTER_USE_BOTH
-			);
-			$tokenConstants = array_flip($tokenConstants);
-		}
-		return $tokenConstants[$id] ?? null;
 	}
 }
