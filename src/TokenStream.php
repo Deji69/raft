@@ -1,6 +1,7 @@
 <?php
 namespace Raft;
 
+use Countable;
 use Raft\Token;
 use Raft\Source;
 use Raft\Exception\SyntaxError;
@@ -8,7 +9,7 @@ use Raft\Exception\SyntaxError;
 /**
  * Represents a PHTML token
  */
-class TokenStream
+class TokenStream implements Countable
 {
 	/**
 	 * The current token in the stream
@@ -146,5 +147,13 @@ class TokenStream
 	public function getSource(): Source
 	{
 		return $this->source;
+	}
+
+	/**
+	 * @return int
+	 */
+	public function count(): int
+	{
+		return count($this->tokens);
 	}
 }

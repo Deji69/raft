@@ -213,10 +213,15 @@ class Lexer
 
 		while ($this->cursor < $this->end) {
 			$token = call_user_func(end($this->state), $token);
+			if ($token === false) {
+				break;
+			}
 			$type = $token ? $token->getType() : Token::END;
 			switch ($type) {
 				case Token::BEGIN:
-					$this->tag = $this->tagRules[$token->getValue()];
+					$tag = $this->tagRules[$token->getValue()];
+					$tag['line'] = $this->source->getLineForOffset($token->getOffset());
+					$this->tag = $tag;
 					$this->cursor = $token->getOffsetEnd();
 					$this->tagStack[] = $this->tag;
 					$this->state[] = $this->tag['state'];
@@ -228,6 +233,21 @@ class Lexer
 				default:
 					break;
 			}
+		}
+
+		if (!empty($this->tagStack)) {
+			$tag = array_pop($this->tagStack);
+			throw new SyntaxError(
+				sprintf(
+					'Unterminated %s at end-of-file ("%s" started on line %d), expecting "%s"',
+					$tag['type'],
+					$tag['begin'],
+					$tag['line'],
+					$tag['end']
+				),
+				$this->cursor,
+				$this->source
+			);
 		}
 
 		$this->addToken($this->createToken(Token::EOF, $this->end, 0));
@@ -265,13 +285,15 @@ class Lexer
 	 */
 	protected function stateComment()
 	{
-		$token = $this->lex([
+		if ($token = $this->lexOneOf([
 			Token::END => '#.*('.preg_quote($this->tag['end'], '#').')#As'
-		]);
-
-		// absorb a single newline following a comment
-		$this->lexOneOf([Token::NEWLINE]);
-		return null;
+		])) {
+			// absorb a single newline following a comment
+			$this->lexOneOf([Token::NEWLINE]);
+			return null;
+		}
+		$this->cursor = $this->end;
+		return false;
 	}
 
 	/**
@@ -325,7 +347,7 @@ class Lexer
 			return $token;
 		}
 		$token = $this->source->getToken($this->cursor);
-		throw new SyntaxError('Unexpected "'.$token.'"', $this->cusor, $this->source);
+		throw new SyntaxError('Unexpected "'.$token.'"', $this->cursor, $this->source);
 	}
 
 	/**
@@ -350,6 +372,9 @@ class Lexer
 	protected function lexOneOf(array $tokenTypes): ?Token
 	{
 		$token = null;
+		if ($this->cursor >= $this->end) {
+			return null;
+		}
 		foreach ($tokenTypes as $type => $rule) {
 			$endPos = $this->cursor;
 

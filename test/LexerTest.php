@@ -5,6 +5,7 @@ use Mockery as m;
 use Raft\Token;
 use Raft\Lexer;
 use Raft\Engine;
+use Raft\Exception\SyntaxError;
 use PHPUnit\Framework\TestCase;
 
 class LexerTest extends TestCase
@@ -43,6 +44,36 @@ class LexerTest extends TestCase
 					[Token::END, '}}'],
 				],
 			],
+		]);
+	}
+
+	public function testUnterminiatedTagException()
+	{
+		$this->expectException(SyntaxError::class);
+		$this->expectExceptionMessage(
+			'Unterminated tag at end-of-file ("{{" started on line 1), expecting "}}" in "noname" on line 1'
+		);
+		$this->runTokenTestLoop([
+			[
+				'test' => 'Unterminated tags throw exceptions',
+				'code' => '{{',
+			]
+		]);
+
+	}
+
+	public function testUnterminatedCommentException()
+	{
+		$this->expectException(SyntaxError::class);
+		$this->expectExceptionMessage(
+			'Unterminated comment at end-of-file ("{#" started on line 1), expecting "#}" in "noname" on line 2'
+		);
+		$this->runTokenTestLoop([
+			[
+				'test' => 'Unterminated comments throw exceptions',
+				'code' => '{# test
+							  test'
+			]
 		]);
 	}
 
@@ -164,9 +195,20 @@ class LexerTest extends TestCase
 
 	public function testLexerFile()
 	{
-		$contents = file_get_contents(__DIR__.'/fixtures/test.phtml');
-		$tokens = $this->getLexerObject()->tokenize($contents);
-		print_r($tokens);
+		$content = file_get_contents(__DIR__.'/fixtures/test.phtml');
+		$this->runTokenTestLoop([
+			[
+				'test' => 'Lexing test.phtml file',
+				'code' => $content,
+				'expects' => [
+					[Token::RAW],
+					[Token::BEGIN, '{{'],
+					[Token::IDENTIFIER, 'lang'],
+					[Token::END, '}}'],
+					[Token::RAW],
+				],
+			],
+		]);
 	}
 
 	protected function runTokenTestLoop(array $vectors)
@@ -176,19 +218,24 @@ class LexerTest extends TestCase
 			$codes = is_array($vector['code']) ? $vector['code'] : [$vector['code']];
 			foreach ($codes as $code) {
 				$tokens = $lexer->tokenize($code);
-				foreach ($vector['expects'] as $expect) {
-					$token = $tokens->next();
-					if (count($expect) > 1) {
-						$success = $token->is($expect[0], $expect[1]);
-						$expected = $expect[1];
-					} else {
-						$success = $token->is($expect[0]);
-						$expected = Token::getTypeFullName($expect[0]);
-					}
-					$this->assertTrue($success, $vector['test']."\nExpected: $expected\nFound: ".$token);
-				}
 
-				$this->assertEquals($tokens->current->getType(), Token::EOF, $vector['test']);
+				if (isset($vector['expects'])) {
+					foreach ($vector['expects'] as $expect) {
+						$token = $tokens->next();
+						if (count($expect) > 1) {
+							$success = $token->is($expect[0], $expect[1]);
+							$expected = $expect[1];
+						} else {
+							$success = $token->is($expect[0]);
+							$expected = Token::getTypeFullName($expect[0]);
+						}
+						$this->assertTrue($success, $vector['test']."\nExpected: $expected\nFound: ".$token);
+					}
+
+					if (count($vector['expects']) >= count($tokens)) {
+						$this->assertEquals($tokens->current->getType(), Token::EOF, $vector['test']);
+					}
+				}
 			}
 		}
 	}
