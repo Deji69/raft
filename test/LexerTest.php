@@ -80,7 +80,7 @@ class LexerTest extends TestCase
 			[
 				'test' => 'Lexing an assortment of lexable tokens',
 				'code' => [
-					'{{a + b * \'string\', 1024--1 && | (-3.14 ^ abc[123])}}',
+					'{{a + b * \'string\', 1024--1 && | (-3.14 : abc[123])}}',
 				],
 				'expects' => [
 					[Token::BEGIN, '{{'],
@@ -94,10 +94,10 @@ class LexerTest extends TestCase
 					[Token::OPERATOR, '--'],
 					[Token::NUMBER, '1'],
 					[Token::OPERATOR, '&&'],
-					[Token::OPERATOR, '|'],
+					[Token::SEPARATOR, '|'],
 					[Token::DELIMITER, '('],
 					[Token::NUMBER, '-3.14'],
-					[Token::OPERATOR, '^'],
+					[Token::SEPARATOR, ':'],
 					[Token::IDENTIFIER, 'abc'],
 					[Token::DELIMITER, '['],
 					[Token::NUMBER, '123'],
@@ -147,18 +147,26 @@ class LexerTest extends TestCase
 				],
 			],
 			[
-				'test' => 'Lexing 3-character operators',
+				'test' => 'Lexing comparison operators',
 				'code' => [
-					'{{**= <<=}}',
+					'{{> <= ==}}',
 				],
 				'expects' => [
 					[Token::BEGIN],
-					[Token::OPERATOR, '**='],
-					[Token::OPERATOR, '<<='],
+					[Token::OPERATOR, '>'],
+					[Token::OPERATOR, '<='],
+					[Token::OPERATOR, '=='],
 					[Token::END],
 				],
 			],
 		]);
+	}
+
+	public function testLexerFile()
+	{
+		$contents = file_get_contents(__DIR__.'/fixtures/test.phtml');
+		$tokens = $this->getLexerObject()->tokenize($contents);
+		print_r($tokens);
 	}
 
 	protected function runTokenTestLoop(array $vectors)
@@ -172,10 +180,12 @@ class LexerTest extends TestCase
 					$token = $tokens->next();
 					if (count($expect) > 1) {
 						$success = $token->is($expect[0], $expect[1]);
+						$expected = $expect[1];
 					} else {
 						$success = $token->is($expect[0]);
+						$expected = Token::getTypeFullName($expect[0]);
 					}
-					$this->assertTrue($success, $vector['test']."\nUnexpected ".$token);
+					$this->assertTrue($success, $vector['test']."\nExpected: $expected\nFound: ".$token);
 				}
 
 				$this->assertEquals($tokens->current->getType(), Token::EOF, $vector['test']);

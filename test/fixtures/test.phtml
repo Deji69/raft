@@ -1,0 +1,21 @@
+{#
+	Really Awesome File Template
+#}
+<html lang="{{ lang }}">
+	{{ begin: head }}
+		<meta charset="utf-8">
+		{{ begin: stylesheets }}
+			<link rel="stylesheet" href="/styles/main.css">
+			{{ begin: extra }}
+				<link rel="stylesheet" href="{{ stylesheet }}">
+			{{ end: extra }}
+		{{ end: stylesheets }}
+		
+		{{ begin: meta_keywords }}
+			<meta name="keywords" content="{{ keywords|join(', ') }}">
+		{{ end: meta_keywords }}
+
+		<title>{{title}}</title>
+	{{ end: head }}
+	{{ content|html.wrap('body') }}
+</html>

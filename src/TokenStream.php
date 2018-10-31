@@ -72,7 +72,7 @@ class TokenStream
 	 */
 	public function skipWhitespace($andNewlines = false)
 	{
-		while ($this->current->is('whitespace') || ($andNewlines && $this->current->is('newline'))) {
+		while ($this->current->is([Token::WHITESPACE, Token::NEWLINE])) {
 			$this->next();
 		}
 	}

@@ -87,15 +87,21 @@ class Source
 
 	/**
 	 * Gets a range of the source code or null if the requested range is invalid.
+	 * If length is not specified, gets code from $start up to the first whitespace or code end.
 	 *
-	 * @param  int $start
-	 * @param  int $length
+	 * @param  int 		$start
+	 * @param  int|null $length
 	 * @return string|null
 	 */
-	public function getToken(int $start, int $length): ?string
+	public function getToken(int $start, int $length = null): ?string
 	{
 		if ($start < 0) {
 			return null;
+		}
+		if ($length === null) {
+			if (preg_match('#\s#A', $this->code, $m, PREG_OFFSET_CAPTURE, $start)) {
+				$length = $m[0][1] - $start;
+			}
 		}
 		if ($start + $length > $this->getLength()) {
 			return null;

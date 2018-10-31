@@ -1,7 +1,6 @@
 <?php
 namespace Raft;
 
-use Closure;
 use Illuminate\Contracts\View\Engine;
 use Illuminate\Contracts\View\Factory as ViewFactory;
 
@@ -60,7 +59,7 @@ class Environment
 		$this->output .= $value;
 	}
 
-	public function block(string $name, Closure $fn)
+	public function block(string $name, callable $fn)
 	{
 		if (!isset($this->blocks[$name])) {
 			$this->blocks[$name] = $fn();
