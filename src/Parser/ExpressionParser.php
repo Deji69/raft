@@ -3,8 +3,8 @@ namespace Raft\Parser;
 
 use Raft\Engine;
 use Raft\Parser;
-use Raft\Token;
-use Raft\TokenStream;
+use Raft\Lexer\Token;
+use Raft\Lexer\TokenStream;
 use Raft\Exception\InternalError;
 
 class ExpressionParser

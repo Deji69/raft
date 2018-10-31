@@ -64,7 +64,7 @@ trait LexesOperator
 		'or',			// or
 	];
 
-	public function lexOperator($src, $pos) {
+	public function lexOperator(string $src, int $pos) {
 		$table = static::$operatorTable;
 		$begin = $pos;
 		do {

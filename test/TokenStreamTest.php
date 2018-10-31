@@ -3,8 +3,8 @@ namespace Raft\Tests;
 
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
-use Raft\Token;
-use Raft\TokenStream;
+use Raft\Lexer\Token;
+use Raft\Lexer\TokenStream;
 
 class TokenStreamTest extends TestCase
 {
@@ -61,7 +61,7 @@ class TokenStreamTest extends TestCase
 	public function testExceptionNextUnexpectedEOF()
 	{
 		$stream = new TokenStream([
-			new Token('raw')
+			new Token(Token::RAW)
 		]);
 		while (!$stream->isEOF()) {
 			$stream->next();
@@ -75,7 +75,7 @@ class TokenStreamTest extends TestCase
 	public function testExceptionPeekUnexpectedEOF()
 	{
 		$stream = new TokenStream([
-			new Token('raw')
+			new Token(Token::RAW)
 		]);
 		$stream->next();
 		$stream->peek();
@@ -84,14 +84,14 @@ class TokenStreamTest extends TestCase
 	protected function setUp()
 	{
 		self::$tokens = [
-			new Token('raw', 1, 1),
-			new Token('raw', 2, 1),
-			new Token('raw', 3, 1),
-			new Token('raw', 4, 1),
-			new Token('raw', 5, 1),
-			new Token('raw', 6, 1),
-			new Token('raw', 7, 1),
-			new Token('eof', 0, 1)
+			new Token(Token::RAW, 1, 1),
+			new Token(Token::RAW, 2, 1),
+			new Token(Token::RAW, 3, 1),
+			new Token(Token::RAW, 4, 1),
+			new Token(Token::RAW, 5, 1),
+			new Token(Token::RAW, 6, 1),
+			new Token(Token::RAW, 7, 1),
+			new Token(Token::EOF, 0, 1)
 		];
 	}
 }

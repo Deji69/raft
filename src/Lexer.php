@@ -1,9 +1,9 @@
 <?php
 namespace Raft;
 
-use Raft\Token;
+use Raft\Lexer\Token;
 use Raft\Engine;
-use Raft\TokenStream;
+use Raft\Lexer\TokenStream;
 use Raft\Exception\SyntaxError;
 use InvalidArgumentException;
 

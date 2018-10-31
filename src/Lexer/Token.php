@@ -1,7 +1,8 @@
 <?php
-namespace Raft;
+namespace Raft\Lexer;
 
 use Raft\Source;
+use Raft\Engine;
 use InvalidArgumentException;
 
 /**

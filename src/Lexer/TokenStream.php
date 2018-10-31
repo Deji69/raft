@@ -1,9 +1,9 @@
 <?php
-namespace Raft;
+namespace Raft\Lexer;
 
 use Countable;
-use Raft\Token;
 use Raft\Source;
+use Raft\Lexer\Token;
 use Raft\Exception\SyntaxError;
 
 /**

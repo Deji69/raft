@@ -2,9 +2,9 @@
 namespace Raft\Tests;
 
 use Mockery as m;
-use Raft\Token;
 use Raft\Lexer;
 use Raft\Engine;
+use Raft\Lexer\Token;
 use Raft\Exception\SyntaxError;
 use PHPUnit\Framework\TestCase;
 
